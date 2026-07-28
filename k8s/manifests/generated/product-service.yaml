@@ -1,0 +1,130 @@
+---
+# Source: product-service/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: product-service
+  labels:
+    helm.sh/chart: product-service-0.1.0
+    app.kubernetes.io/name: product-service
+    app.kubernetes.io/instance: product-service
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+automountServiceAccountToken: true
+---
+# Source: product-service/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: product-service
+  labels:
+    helm.sh/chart: product-service-0.1.0
+    app.kubernetes.io/name: product-service
+    app.kubernetes.io/instance: product-service
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: product-service
+    app.kubernetes.io/instance: product-service
+---
+# Source: product-service/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-service
+  labels:
+    helm.sh/chart: product-service-0.1.0
+    app.kubernetes.io/name: product-service
+    app.kubernetes.io/instance: product-service
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: product-service
+      app.kubernetes.io/instance: product-service
+  template:
+    metadata:
+      labels:
+        helm.sh/chart: product-service-0.1.0
+        app.kubernetes.io/name: product-service
+        app.kubernetes.io/instance: product-service
+        app.kubernetes.io/version: "1.16.0"
+        app.kubernetes.io/managed-by: Helm
+    spec:
+      serviceAccountName: product-service
+      containers:
+        - name: product-service
+          image: "bechir19/product-service:v6"
+          imagePullPolicy: Never
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+            initialDelaySeconds: 40
+            periodSeconds: 30
+            timeoutSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 20
+---
+# Source: product-service/templates/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: product-service
+  labels:
+    helm.sh/chart: product-service-0.1.0
+    app.kubernetes.io/name: product-service
+    app.kubernetes.io/instance: product-service
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  rules:
+    - host: "product-service.local"
+      http:
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: product-service
+                port:
+                  number: 8080
+---
+# Source: product-service/templates/tests/test-connection.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "product-service-test-connection"
+  labels:
+    helm.sh/chart: product-service-0.1.0
+    app.kubernetes.io/name: product-service
+    app.kubernetes.io/instance: product-service
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['product-service:8080']
+  restartPolicy: Never

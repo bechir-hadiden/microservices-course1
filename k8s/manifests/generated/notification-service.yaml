@@ -1,0 +1,124 @@
+---
+# Source: notification-service/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: notification-service
+  labels:
+    helm.sh/chart: notification-service-0.1.0
+    app.kubernetes.io/name: notification-service
+    app.kubernetes.io/instance: notification-service
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+automountServiceAccountToken: true
+---
+# Source: notification-service/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: notification-service
+  labels:
+    helm.sh/chart: notification-service-0.1.0
+    app.kubernetes.io/name: notification-service
+    app.kubernetes.io/instance: notification-service
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8083
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: notification-service
+    app.kubernetes.io/instance: notification-service
+---
+# Source: notification-service/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-service
+  labels:
+    helm.sh/chart: notification-service-0.1.0
+    app.kubernetes.io/name: notification-service
+    app.kubernetes.io/instance: notification-service
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: notification-service
+      app.kubernetes.io/instance: notification-service
+  template:
+    metadata:
+      labels:
+        helm.sh/chart: notification-service-0.1.0
+        app.kubernetes.io/name: notification-service
+        app.kubernetes.io/instance: notification-service
+        app.kubernetes.io/version: "1.16.0"
+        app.kubernetes.io/managed-by: Helm
+    spec:
+      serviceAccountName: notification-service
+      containers:
+        - name: notification-service
+          image: "bechir19/notification-service:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8083
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+---
+# Source: notification-service/templates/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: notification-service
+  labels:
+    helm.sh/chart: notification-service-0.1.0
+    app.kubernetes.io/name: notification-service
+    app.kubernetes.io/instance: notification-service
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  rules:
+    - host: "notification-service.local"
+      http:
+        paths:
+          - path: /actuator/health
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: notification-service
+                port:
+                  number: 8083
+---
+# Source: notification-service/templates/tests/test-connection.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "notification-service-test-connection"
+  labels:
+    helm.sh/chart: notification-service-0.1.0
+    app.kubernetes.io/name: notification-service
+    app.kubernetes.io/instance: notification-service
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['notification-service:8083']
+  restartPolicy: Never

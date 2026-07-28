@@ -1,0 +1,124 @@
+---
+# Source: order-service/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: order-service
+  labels:
+    helm.sh/chart: order-service-0.1.0
+    app.kubernetes.io/name: order-service
+    app.kubernetes.io/instance: order-service
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+automountServiceAccountToken: true
+---
+# Source: order-service/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: order-service
+  labels:
+    helm.sh/chart: order-service-0.1.0
+    app.kubernetes.io/name: order-service
+    app.kubernetes.io/instance: order-service
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8081
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: order-service
+    app.kubernetes.io/instance: order-service
+---
+# Source: order-service/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-service
+  labels:
+    helm.sh/chart: order-service-0.1.0
+    app.kubernetes.io/name: order-service
+    app.kubernetes.io/instance: order-service
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: order-service
+      app.kubernetes.io/instance: order-service
+  template:
+    metadata:
+      labels:
+        helm.sh/chart: order-service-0.1.0
+        app.kubernetes.io/name: order-service
+        app.kubernetes.io/instance: order-service
+        app.kubernetes.io/version: "1.16.0"
+        app.kubernetes.io/managed-by: Helm
+    spec:
+      serviceAccountName: order-service
+      containers:
+        - name: order-service
+          image: "bechir19/order-service:v3"
+          imagePullPolicy: Never
+          ports:
+            - name: http
+              containerPort: 8081
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: http
+---
+# Source: order-service/templates/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: order-service
+  labels:
+    helm.sh/chart: order-service-0.1.0
+    app.kubernetes.io/name: order-service
+    app.kubernetes.io/instance: order-service
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  rules:
+    - host: "order-service.local"
+      http:
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: order-service
+                port:
+                  number: 8081
+---
+# Source: order-service/templates/tests/test-connection.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "order-service-test-connection"
+  labels:
+    helm.sh/chart: order-service-0.1.0
+    app.kubernetes.io/name: order-service
+    app.kubernetes.io/instance: order-service
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args: ['order-service:8081']
+  restartPolicy: Never
