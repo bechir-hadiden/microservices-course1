@@ -4,11 +4,17 @@ metadata:
   name: {{ include "order-service.fullname" . }}
   labels:
     {{- include "order-service.labels" . | nindent 4 }}
+  # --- AJOUTEZ CE BLOC ICI ---
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "/actuator/prometheus"
+    prometheus.io/port: "8081" 
+  # ---------------------------
 spec:
   type: {{ .Values.service.type }}
   ports:
     - port: {{ .Values.service.port }}
-      targetPort: http
+      targetPort: 8081      # Utiliser le port direct 8081 est plus sûr
       protocol: TCP
       name: http
   selector:

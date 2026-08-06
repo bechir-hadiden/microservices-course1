@@ -4,6 +4,12 @@ metadata:
   name: {{ include "patient-service.fullname" . }}
   labels:
     {{- include "patient-service.labels" . | nindent 4 }}
+  # --- AJOUTEZ CE BLOC ICI ---
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "/actuator/prometheus"
+    prometheus.io/port: "8080"
+  # ---------------------------
 spec:
   type: {{ .Values.service.type }}
   ports:
