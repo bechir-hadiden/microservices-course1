@@ -65,7 +65,7 @@ spec:
       serviceAccountName: api-getway-api-gateway
       containers:
         - name: api-gateway
-          image: "bechir19/api-gateway:latest"
+          image: "bechir19/api-gateway:v4"
           imagePullPolicy: Never
           ports:
             - name: http
