@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: bechir19/api-gateway
-  tag: "latest"
+  tag: "v4"
   pullPolicy: Never
 
 imagePullSecrets: []
