@@ -16,7 +16,7 @@ automountServiceAccountToken: true
 apiVersion: v1
 kind: Service
 metadata:
-  name: order-service
+  name: product-service
   annotations:
     prometheus.io/scrape: "true"
     prometheus.io/path: "/actuator/prometheus"
