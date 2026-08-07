@@ -16,7 +16,11 @@ automountServiceAccountToken: true
 apiVersion: v1
 kind: Service
 metadata:
-  name: product-service
+  name: order-service
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "/actuator/prometheus"
+    prometheus.io/port: "8080"
   labels:
     helm.sh/chart: product-service-0.1.0
     app.kubernetes.io/name: product-service

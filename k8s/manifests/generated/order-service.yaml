@@ -17,8 +17,11 @@ apiVersion: v1
 kind: Service
 metadata:
   name: order-service
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "/actuator/prometheus"
+    prometheus.io/port: "8081"
   labels:
-    helm.sh/chart: order-service-0.1.0
     app.kubernetes.io/name: order-service
     app.kubernetes.io/instance: order-service
     app.kubernetes.io/version: "1.16.0"
